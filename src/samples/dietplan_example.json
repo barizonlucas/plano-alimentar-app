@@ -5,15 +5,35 @@
         "time": "06:00",
         "name": "Antes do exercício",
         "options": [
-          ["Suco de uva integral - Superbom® (200ml)", "Banana (70g)", "Mel (1 colher de sopa)", "Granola (15g)", "Corn flakes - Kellogg's® (300g)"],
-          ["Torrada integral - Bauducco® (40g) ou Pão integral (2 fatias)", "Geleia 100% fruta (30g) ou Doce de leite - Moça Nestlé® (20g)", "Uva (80g)", "Mel (1 colher de sobremesa)"]
+          [
+            "Suco de uva integral - Superbom® (200ml)",
+            "Banana (70g)",
+            "Mel (1 colher de sopa)",
+            "Granola (15g)",
+            "Corn flakes - Kellogg's® (300g)"
+          ],
+          [
+            "Torrada integral - Bauducco® (40g) ou Pão integral (2 fatias)",
+            "Geleia 100% fruta (30g) ou Doce de leite - Moça Nestlé® (20g)",
+            "Uva (80g)",
+            "Mel (1 colher de sobremesa)"
+          ]
         ]
       },
       {
         "time": "08:00",
         "name": "Café da manhã",
         "options": [
-          ["Banana (100g)", "Granola (15g)", "Whey protein (10g)", "Leite desnatado - Molico Nestlé® (200ml)", "Pão integral (2 fatias) ou Tapioca (40g) ou Pão francês (50g)", "Creme de ricota (20g)", "Goiabada (30g)", "Caldo de cana (300ml)"]
+          [
+            "Banana (100g)",
+            "Granola (15g)",
+            "Whey protein (10g)",
+            "Leite desnatado - Molico Nestlé® (200ml)",
+            "Pão integral (2 fatias) ou Tapioca (40g) ou Pão francês (50g)",
+            "Creme de ricota (20g)",
+            "Goiabada (30g)",
+            "Caldo de cana (300ml)"
+          ]
         ]
       },
       {
@@ -27,35 +47,67 @@
         "time": "12:30",
         "name": "Almoço",
         "options": [
-          ["Alface (4 folhas)", "Tomate (2 fatias)", "Cenoura (50g) ou Abobrinha (120g) ou Brócolis (80g) ou Couve-flor (100g)", "Arroz branco (130g) ou Batata (180g) ou Batata doce (165g) ou Milho (110g)", "Feijão (100g)", "Patinho (100g) ou Filé de frango (110g) ou Peixe (150g)", "Laranja (150g) ou Mexerica (150g) ou Caqui (100g) ou Abacaxi (140g) ou Abacate (50g)"]
+          [
+            "Alface (4 folhas)",
+            "Tomate (2 fatias)",
+            "Cenoura (50g) ou Abobrinha (120g) ou Brócolis (80g) ou Couve-flor (100g)",
+            "Arroz branco (130g) ou Batata (180g) ou Batata doce (165g) ou Milho (110g)",
+            "Feijão (100g)",
+            "Patinho (100g) ou Filé de frango (110g) ou Peixe (150g)",
+            "Laranja (150g) ou Mexerica (150g) ou Caqui (100g) ou Abacaxi (140g) ou Abacate (50g)"
+          ]
         ]
       },
       {
         "time": "15:00",
         "name": "Lanche da tarde 1",
         "options": [
-          ["Maçã (160g) ou Manga (120g) ou Uva (110g) ou Pera (150g) ou Banana (100g)", "Goiabada (30g)", "Farelo de aveia - Oat Bran Quaker® (20g)"]
+          [
+            "Maçã (160g) ou Manga (120g) ou Uva (110g) ou Pera (150g) ou Banana (100g)",
+            "Goiabada (30g)",
+            "Farelo de aveia - Oat Bran Quaker® (20g)"
+          ]
         ]
       },
       {
         "time": "17:00",
         "name": "Lanche da tarde",
         "options": [
-          ["Pão integral (2 fatias)", "Ovo de galinha (2 un)", "Queijo minas frescal - Danúbio® (30g)", "Queijo cottage Tirolez (30g)", "Laranja (140g) ou Abacaxi (130g) ou Uva (100g) ou Banana (70g)", "Castanha do Pará (3 un)"]
+          [
+            "Pão integral (2 fatias)",
+            "Ovo de galinha (2 un)",
+            "Queijo minas frescal - Danúbio® (30g)",
+            "Queijo cottage Tirolez (30g)",
+            "Laranja (140g) ou Abacaxi (130g) ou Uva (100g) ou Banana (70g)",
+            "Castanha do Pará (3 un)"
+          ]
         ]
       },
       {
         "time": "20:00",
         "name": "Jantar",
         "options": [
-          ["Alface (4 folhas)", "Tomate (2 fatias)", "Cenoura (50g) ou Abobrinha (120g) ou Brócolis (80g) ou Couve-flor (100g)", "Arroz branco (130g) ou Batata (180g) ou Batata doce (165g) ou Milho (110g)", "Feijão (100g)", "Patinho (100g) ou Filé de frango (110g) ou Peixe (150g)", "Laranja (150g) ou Mexerica (150g) ou Caqui (100g) ou Abacaxi (140g) ou Abacate (50g)"]
+          [
+            "Alface (4 folhas)",
+            "Tomate (2 fatias)",
+            "Cenoura (50g) ou Abobrinha (120g) ou Brócolis (80g) ou Couve-flor (100g)",
+            "Arroz branco (130g) ou Batata (180g) ou Batata doce (165g) ou Milho (110g)",
+            "Feijão (100g)",
+            "Patinho (100g) ou Filé de frango (110g) ou Peixe (150g)",
+            "Laranja (150g) ou Mexerica (150g) ou Caqui (100g) ou Abacaxi (140g) ou Abacate (50g)"
+          ]
         ]
       },
       {
         "time": "22:00",
         "name": "Ceia",
         "options": [
-          ["Whey protein (10g)", "Leite desnatado - Molico Nestlé® (150ml)", "Iogurte natural desnatado - Nestlé® (70g)", "Granola (1 colher de sopa)"]
+          [
+            "Whey protein (10g)",
+            "Leite desnatado - Molico Nestlé® (150ml)",
+            "Iogurte natural desnatado - Nestlé® (70g)",
+            "Granola (1 colher de sopa)"
+          ]
         ]
       }
     ],
@@ -64,50 +116,108 @@
         "time": "06:00",
         "name": "Antes do exercício",
         "options": [
-          ["Suco de uva integral - Superbom® (150ml)", "Banana (70g)", "Mel (1 colher de sopa)", "Granola (15g)", "Corn flakes - Kellogg's® (30g)"],
-          ["Torrada integral - Bauducco® (40g) ou Pão integral (2 fatias)", "Geleia 100% fruta (30g) ou Doce de leite - Moça Nestlé® (20g)", "Uva (80g)", "Mel (1 colher de sobremesa)"]
+          [
+            "Suco de uva integral - Superbom® (150ml)",
+            "Banana (70g)",
+            "Mel (1 colher de sopa)",
+            "Granola (15g)",
+            "Corn flakes - Kellogg's® (30g)"
+          ],
+          [
+            "Torrada integral - Bauducco® (40g) ou Pão integral (2 fatias)",
+            "Geleia 100% fruta (30g) ou Doce de leite - Moça Nestlé® (20g)",
+            "Uva (80g)",
+            "Mel (1 colher de sobremesa)"
+          ]
         ]
       },
       {
         "time": "08:00",
         "name": "Café da manhã",
         "options": [
-          ["Banana (100g)", "Granola (15g)", "Whey protein (10g)", "Leite desnatado - Molico Nestlé® (200ml)", "Pão integral (2 fatias) ou Tapioca (40g) ou Pão francês (50g)", "Creme de ricota (20g)", "Pasta de Amendoim Integral - EAT CLEAN (25g)"]
+          [
+            "Banana (100g)",
+            "Granola (15g)",
+            "Whey protein (10g)",
+            "Leite desnatado - Molico Nestlé® (200ml)",
+            "Pão integral (2 fatias) ou Tapioca (40g) ou Pão francês (50g)",
+            "Creme de ricota (20g)",
+            "Pasta de Amendoim Integral - EAT CLEAN (25g)"
+          ]
         ]
       },
       {
         "time": "12:30",
         "name": "Almoço",
         "options": [
-          ["Alface (4 folhas)", "Tomate (2 fatias)", "Cenoura (50g) ou Abobrinha (120g) ou Brócolis (80g) ou Couve-flor (100g)", "Arroz branco (130g) ou Batata (180g) ou Batata doce (165g) ou Milho (110g)", "Feijão (100g)", "Patinho (100g) ou Filé de frango (110g) ou Peixe (150g)", "Laranja (150g) ou Mexerica (150g) ou Caqui (100g) ou Abacaxi (140g) ou Abacate (50g)"]
+          [
+            "Alface (4 folhas)",
+            "Tomate (2 fatias)",
+            "Cenoura (50g) ou Abobrinha (120g) ou Brócolis (80g) ou Couve-flor (100g)",
+            "Arroz branco (130g) ou Batata (180g) ou Batata doce (165g) ou Milho (110g)",
+            "Feijão (100g)",
+            "Patinho (100g) ou Filé de frango (110g) ou Peixe (150g)",
+            "Laranja (150g) ou Mexerica (150g) ou Caqui (100g) ou Abacaxi (140g) ou Abacate (50g)"
+          ]
         ]
       },
       {
         "time": "17:00",
         "name": "Lanche da tarde",
         "options": [
-          ["Pão integral (2 fatias)", "Ovo de galinha (2 un)", "Queijo minas frescal - Danúbio® (30g)", "Queijo cottage Tirolez (30g)", "Castanha do Pará (3 un)", "Banana (70g) ou Maçã (130g)", "Mel (2 colheres de sopa)", "Farelo de aveia - Oat Bran Quaker® (25g)"]
+          [
+            "Pão integral (2 fatias)",
+            "Ovo de galinha (2 un)",
+            "Queijo minas frescal - Danúbio® (30g)",
+            "Queijo cottage Tirolez (30g)",
+            "Castanha do Pará (3 un)",
+            "Banana (70g) ou Maçã (130g)",
+            "Mel (2 colheres de sopa)",
+            "Farelo de aveia - Oat Bran Quaker® (25g)"
+          ]
         ]
       },
       {
         "time": "20:00",
         "name": "Jantar",
         "options": [
-          ["Alface (4 folhas)", "Tomate (2 fatias)", "Cenoura (50g) ou Abobrinha (120g) ou Brócolis (80g) ou Couve-flor (100g)", "Arroz branco (200g) ou Macarrão (200g)", "Feijão (100g)", "Patinho (100g) ou Filé de frango (110g) ou Peixe (150g)", "Laranja (150g) ou Mexerica (150g) ou Caqui (100g) ou Abacaxi (140g) ou Abacate (50g)"]
+          [
+            "Alface (4 folhas)",
+            "Tomate (2 fatias)",
+            "Cenoura (50g) ou Abobrinha (120g) ou Brócolis (80g) ou Couve-flor (100g)",
+            "Arroz branco (200g) ou Macarrão (200g)",
+            "Feijão (100g)",
+            "Patinho (100g) ou Filé de frango (110g) ou Peixe (150g)",
+            "Laranja (150g) ou Mexerica (150g) ou Caqui (100g) ou Abacaxi (140g) ou Abacate (50g)"
+          ]
         ]
       },
       {
         "time": "22:00",
         "name": "Ceia",
         "options": [
-          ["Whey protein (10g)", "Leite desnatado - Molico Nestlé® (150ml)", "Granola (1 colher de sopa)"]
+          [
+            "Whey protein (10g)",
+            "Leite desnatado - Molico Nestlé® (150ml)",
+            "Granola (1 colher de sopa)"
+          ]
         ]
       }
     ],
-    "Qua": [ /* Igual a Seg */ ],
-    "Qui": [ /* Igual a Ter */ ],
-    "Sex": [ /* Igual a Seg */ ],
-    "Sab": [ /* Igual a Ter */ ],
-    "Dom": [ /* Igual a Ter */ ]
+    "Qua": [
+      /* Igual a Seg */
+    ],
+    "Qui": [
+      /* Igual a Ter */
+    ],
+    "Sex": [
+      /* Igual a Seg */
+    ],
+    "Sab": [
+      /* Igual a Ter */
+    ],
+    "Dom": [
+      /* Igual a Ter */
+    ]
   }
 }

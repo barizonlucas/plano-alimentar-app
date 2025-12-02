@@ -74,9 +74,7 @@ const fileToBase64 = async (file: File): Promise<string> => {
   return btoa(binary)
 }
 
-export async function interpretDietPlan(
-  file: File,
-): Promise<GeminiResult> {
+export async function interpretDietPlan(file: File): Promise<GeminiResult> {
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY
   if (!apiKey) {
     throw new Error(
@@ -131,7 +129,9 @@ export async function interpretDietPlan(
   try {
     parsed = JSON.parse(cleaned)
   } catch {
-    throw new Error('Não foi possível interpretar o JSON retornado pelo Gemini.')
+    throw new Error(
+      'Não foi possível interpretar o JSON retornado pelo Gemini.',
+    )
   }
 
   localStorage.setItem(RAW_PLAN_STORAGE_KEY, JSON.stringify(parsed))
