@@ -34,7 +34,7 @@ export const Navbar = () => {
             className="flex items-center gap-2 font-bold text-xl text-primary transition-colors hover:text-primary/80"
           >
             <Apple className="h-6 w-6 fill-primary text-primary" />
-            <span>NutriPlan</span>
+            <span>Mandi</span>
           </Link>
         </div>
 
@@ -73,7 +73,7 @@ export const Navbar = () => {
                   className="flex items-center gap-2 font-bold text-xl text-primary"
                 >
                   <Apple className="h-6 w-6 fill-primary" />
-                  NutriPlan
+                  Mandi
                 </Link>
                 <div className="flex flex-col gap-4">
                   {navItems.map((item) => (

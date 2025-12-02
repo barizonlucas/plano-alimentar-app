@@ -5,7 +5,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
@@ -37,7 +36,7 @@ export default function Settings() {
       'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr)
     const linkElement = document.createElement('a')
     linkElement.setAttribute('href', dataUri)
-    linkElement.setAttribute('download', 'nutriplan-backup-completo.json')
+    linkElement.setAttribute('download', 'mandi-backup-completo.json')
     linkElement.click()
   }
 
@@ -116,7 +115,7 @@ export default function Settings() {
       </Card>
 
       <div className="text-center text-sm text-muted-foreground pt-8">
-        <p>NutriPlan v0.0.1</p>
+        <p>Mandi v0.0.1</p>
       </div>
     </div>
   )
