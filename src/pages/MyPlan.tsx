@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import usePlanStore from '@/stores/usePlanStore'
 import { DEFAULT_PLAN, WeekPlan } from '@/lib/types'
+import { interpretDietPlan } from '@/lib/gemini'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -23,10 +24,21 @@ import {
   Upload,
   FileText,
   Loader2,
-  CheckCircle2,
 } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
+
+const formatMealItemText = (text: string): string => {
+  if (!text) {
+    return ''
+  }
+
+  return text
+    .split('•')
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .join('\n')
+}
 
 export default function MyPlan() {
   const { plan, hasPlan, savePlan, resetPlan } = usePlanStore()
@@ -96,8 +108,7 @@ export default function MyPlan() {
     }, 300)
 
     try {
-      // Simulate processing delay (Future Gemini Integration point)
-      await processUploadedFile(file)
+      const { weekPlan } = await interpretDietPlan(file)
 
       clearInterval(progressInterval)
       setUploadProgress(100)
@@ -105,14 +116,11 @@ export default function MyPlan() {
       // Small delay to show 100%
       setTimeout(() => {
         setIsUploading(false)
-        // For now, we load the default plan as the "parsed" result
-        // In the future, this would be the result from the Gemini API
-        savePlan(DEFAULT_PLAN)
-
+        savePlan(weekPlan)
         toast({
           title: 'Upload concluído!',
           description:
-            'Seu plano alimentar foi carregado e processado com sucesso.',
+            'Seu plano alimentar foi interpretado pelo Gemini e salvo.',
         })
       }, 500)
     } catch (error) {
@@ -121,7 +129,9 @@ export default function MyPlan() {
       toast({
         title: 'Erro no upload',
         description:
-          'Ocorreu um erro ao processar seu arquivo. Tente novamente.',
+          error instanceof Error
+            ? error.message
+            : 'Ocorreu um erro ao processar seu arquivo. Tente novamente.',
         variant: 'destructive',
       })
     }
@@ -130,13 +140,6 @@ export default function MyPlan() {
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
-  }
-
-  // Mock function for future Gemini integration
-  const processUploadedFile = async (file: File): Promise<void> => {
-    // This is where we would send the file to the backend/Gemini
-    // console.log('File ready for Gemini processing:', file)
-    return new Promise((resolve) => setTimeout(resolve, 3000))
   }
 
   const addItem = (day: string, mealIndex: number) => {
@@ -365,8 +368,8 @@ export default function MyPlan() {
                               </Button>
                             </div>
                           ) : (
-                            <span className="text-sm leading-relaxed text-foreground/90">
-                              {item.name}
+                            <span className="text-sm leading-relaxed text-foreground/90 whitespace-pre-line">
+                              {formatMealItemText(item.name)}
                             </span>
                           )}
                         </div>
