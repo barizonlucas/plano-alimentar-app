@@ -11,14 +11,10 @@ import {
   CheckCircle,
   AlertTriangle,
   XCircle,
-  ArrowRight,
   Home,
   BarChart2,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import Confetti from 'react-confetti'
-import { useWindowSize } from '@/hooks/use-mobile' // We can create a simpler hook or just use window logic, but lets just mock useWindowSize logic inside component to avoid dependency issues if file is read-only.
-// Actually, I will just implement useWindowSize logic inside here or use fixed size for simplicity as I cannot edit hooks/use-mobile.tsx and it exports useIsMobile not useWindowSize.
+import { useEffect } from 'react'
 
 export default function MealFeedback() {
   const location = useLocation()
@@ -67,35 +63,8 @@ export default function MealFeedback() {
   const data = getFeedbackData(score)
   const Icon = data.icon
 
-  // Confetti logic
-  const [showConfetti, setShowConfetti] = useState(score >= 90)
-  const [windowSize, setWindowSize] = useState({
-    width: window.innerWidth,
-    height: window.innerHeight,
-  })
-
-  useEffect(() => {
-    const handleResize = () =>
-      setWindowSize({ width: window.innerWidth, height: window.innerHeight })
-    window.addEventListener('resize', handleResize)
-    if (showConfetti) {
-      const timer = setTimeout(() => setShowConfetti(false), 5000)
-      return () => clearTimeout(timer)
-    }
-    return () => window.removeEventListener('resize', handleResize)
-  }, [showConfetti])
-
   return (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] relative overflow-hidden">
-      {showConfetti && (
-        <Confetti
-          width={windowSize.width}
-          height={windowSize.height}
-          numberOfPieces={200}
-          recycle={false}
-        />
-      )}
-
+    <div className="flex flex-col items-center justify-center min-h-[80vh] relative overflow-hidden p-4">
       <Card
         className="w-full max-w-md text-center shadow-lg border-t-4 animate-pop"
         style={{
