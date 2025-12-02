@@ -1,17 +1,11 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import usePlanStore from '@/stores/usePlanStore'
-import { DEFAULT_PLAN, DayPlan, Meal } from '@/lib/types'
+import { DEFAULT_PLAN, WeekPlan } from '@/lib/types'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Progress } from '@/components/ui/progress'
 import {
   Dialog,
   DialogContent,
@@ -21,16 +15,38 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Plus, Trash2, Save, Download } from 'lucide-react'
+import {
+  Plus,
+  Trash2,
+  Save,
+  Download,
+  Upload,
+  FileText,
+  Loader2,
+  CheckCircle2,
+} from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
+import { cn } from '@/lib/utils'
 
 export default function MyPlan() {
   const { plan, hasPlan, savePlan, resetPlan } = usePlanStore()
   const [activeTab, setActiveTab] = useState('monday')
   const [isEditing, setIsEditing] = useState(false)
 
+  // Upload states
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   // Local state for editing to avoid frequent context updates
-  const [localPlan, setLocalPlan] = useState(hasPlan ? plan : DEFAULT_PLAN)
+  const [localPlan, setLocalPlan] = useState<WeekPlan>(hasPlan ? plan : {})
+
+  // Sync local plan when store plan changes (e.g. after upload)
+  useEffect(() => {
+    if (hasPlan) {
+      setLocalPlan(plan)
+    }
+  }, [plan, hasPlan])
 
   const handleSave = () => {
     savePlan(localPlan)
@@ -44,6 +60,83 @@ export default function MyPlan() {
       title: 'Modelo importado',
       description: 'Você pode editar este plano conforme necessário.',
     })
+  }
+
+  const handleFileSelect = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    if (file.type !== 'application/pdf' && !file.name.endsWith('.pdf')) {
+      toast({
+        title: 'Formato inválido',
+        description: 'Por favor, selecione um arquivo PDF.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    setIsUploading(true)
+    setUploadProgress(0)
+
+    // Simulate upload progress
+    const progressInterval = setInterval(() => {
+      setUploadProgress((prev) => {
+        if (prev >= 90) {
+          clearInterval(progressInterval)
+          return 90
+        }
+        return prev + 10
+      })
+    }, 300)
+
+    try {
+      // Simulate processing delay (Future Gemini Integration point)
+      await processUploadedFile(file)
+
+      clearInterval(progressInterval)
+      setUploadProgress(100)
+
+      // Small delay to show 100%
+      setTimeout(() => {
+        setIsUploading(false)
+        // For now, we load the default plan as the "parsed" result
+        // In the future, this would be the result from the Gemini API
+        savePlan(DEFAULT_PLAN)
+
+        toast({
+          title: 'Upload concluído!',
+          description:
+            'Seu plano alimentar foi carregado e processado com sucesso.',
+        })
+      }, 500)
+    } catch (error) {
+      clearInterval(progressInterval)
+      setIsUploading(false)
+      toast({
+        title: 'Erro no upload',
+        description:
+          'Ocorreu um erro ao processar seu arquivo. Tente novamente.',
+        variant: 'destructive',
+      })
+    }
+
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  // Mock function for future Gemini integration
+  const processUploadedFile = async (file: File): Promise<void> => {
+    // This is where we would send the file to the backend/Gemini
+    // console.log('File ready for Gemini processing:', file)
+    return new Promise((resolve) => setTimeout(resolve, 3000))
   }
 
   const addItem = (day: string, mealIndex: number) => {
@@ -95,21 +188,73 @@ export default function MyPlan() {
 
   if (!hasPlan && !isEditing) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6 text-center">
-        <h2 className="text-3xl font-bold">Você ainda não tem um plano.</h2>
-        <p className="text-muted-foreground max-w-md">
-          Para começar, você pode importar um modelo padrão e personalizá-lo, ou
-          criar um do zero.
-        </p>
-        <div className="flex gap-4">
-          <Button onClick={handleImportTemplate}>Usar Modelo Padrão</Button>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-8 text-center px-4 animate-fade-in">
+        <div className="rounded-full bg-primary/10 p-6">
+          {isUploading ? (
+            <Loader2 className="h-12 w-12 text-primary animate-spin" />
+          ) : (
+            <FileText className="h-12 w-12 text-primary" />
+          )}
         </div>
+
+        <div className="max-w-md space-y-2">
+          <h2 className="text-3xl font-bold tracking-tight">
+            {isUploading ? 'Processando seu plano...' : 'Vamos começar?'}
+          </h2>
+          <p className="text-muted-foreground">
+            {isUploading
+              ? 'Estamos lendo e organizando seu plano alimentar. Isso pode levar alguns segundos.'
+              : 'Carregue o PDF enviado pelo seu nutricionista para importarmos automaticamente suas refeições.'}
+          </p>
+        </div>
+
+        {isUploading ? (
+          <div className="w-full max-w-xs space-y-2">
+            <Progress value={uploadProgress} className="h-2" />
+            <p className="text-xs text-muted-foreground font-mono">
+              {uploadProgress}% concluído
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4 w-full max-w-xs">
+            <Input
+              type="file"
+              accept=".pdf,application/pdf"
+              className="hidden"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+            />
+            <Button
+              size="lg"
+              className="w-full gap-2 shadow-lg hover:shadow-xl transition-all duration-300"
+              onClick={handleFileSelect}
+            >
+              <Upload className="h-5 w-5" />
+              Carregar seu Plano Alimentar
+            </Button>
+
+            <div className="relative py-2">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Ou se preferir
+                </span>
+              </div>
+            </div>
+
+            <Button variant="ghost" size="sm" onClick={handleImportTemplate}>
+              Usar Modelo Padrão (Teste)
+            </Button>
+          </div>
+        )}
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in-up">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold">Meu Plano Alimentar</h1>
@@ -117,18 +262,22 @@ export default function MyPlan() {
             Gerencie suas refeições semanais.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {!isEditing ? (
             <>
-              <Button variant="outline" onClick={exportData}>
+              <Button variant="outline" onClick={exportData} size="sm">
                 <Download className="mr-2 h-4 w-4" /> Exportar
               </Button>
-              <Button onClick={() => setIsEditing(true)}>Editar Plano</Button>
+              {/* Hidden input for re-upload if needed, though button not explicitly requested for this view */}
+              <Button onClick={() => setIsEditing(true)} size="sm">
+                Editar Plano
+              </Button>
             </>
           ) : (
             <Button
               onClick={handleSave}
               className="bg-green-600 hover:bg-green-700"
+              size="sm"
             >
               <Save className="mr-2 h-4 w-4" /> Salvar Alterações
             </Button>
@@ -150,34 +299,46 @@ export default function MyPlan() {
         </TabsList>
 
         {days.map((day) => (
-          <TabsContent key={day.id} value={day.id} className="mt-6 space-y-4">
+          <TabsContent
+            key={day.id}
+            value={day.id}
+            className="mt-6 space-y-4 focus-visible:ring-0"
+          >
             {localPlan[day.id]?.meals.length === 0 ? (
-              <Card>
-                <CardContent className="pt-6 text-center text-muted-foreground">
-                  Nenhuma refeição planejada para este dia.
+              <Card className="border-dashed">
+                <CardContent className="pt-10 pb-10 text-center text-muted-foreground">
+                  <p>Nenhuma refeição planejada para este dia.</p>
                   {isEditing && (
-                    <p className="text-sm mt-2">
-                      (Funcionalidade de adicionar refeição completa viria aqui)
-                    </p>
+                    <Button variant="link" className="mt-2">
+                      <Plus className="mr-2 h-4 w-4" /> Adicionar Refeição
+                    </Button>
                   )}
                 </CardContent>
               </Card>
             ) : (
               localPlan[day.id]?.meals.map((meal, mealIndex) => (
-                <Card key={meal.id} className="overflow-hidden">
+                <Card
+                  key={meal.id}
+                  className="overflow-hidden border-l-4 border-l-primary"
+                >
                   <CardHeader className="bg-muted/30 py-4">
                     <div className="flex justify-between items-center">
-                      <CardTitle className="text-lg">{meal.name}</CardTitle>
-                      <span className="font-mono text-sm bg-background px-2 py-1 rounded border">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        {meal.name}
+                      </CardTitle>
+                      <span className="font-mono text-sm bg-background px-2 py-1 rounded border text-muted-foreground">
                         {meal.time}
                       </span>
                     </div>
                   </CardHeader>
                   <CardContent className="pt-4">
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {meal.items.map((item, itemIndex) => (
-                        <div key={item.id} className="flex items-center gap-2">
-                          <div className="h-2 w-2 rounded-full bg-primary/60" />
+                        <div
+                          key={item.id}
+                          className="flex items-start gap-3 group"
+                        >
+                          <div className="mt-1.5 h-2 w-2 rounded-full bg-primary/60 shrink-0" />
                           {isEditing ? (
                             <div className="flex flex-1 gap-2">
                               <Input
@@ -190,12 +351,12 @@ export default function MyPlan() {
                                     e.target.value,
                                   )
                                 }
-                                className="h-8"
+                                className="h-8 text-sm"
                               />
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 text-destructive"
+                                className="h-8 w-8 text-destructive hover:bg-destructive/10"
                                 onClick={() =>
                                   removeItem(day.id, mealIndex, itemIndex)
                                 }
@@ -204,7 +365,9 @@ export default function MyPlan() {
                               </Button>
                             </div>
                           ) : (
-                            <span className="text-sm">{item.name}</span>
+                            <span className="text-sm leading-relaxed text-foreground/90">
+                              {item.name}
+                            </span>
                           )}
                         </div>
                       ))}
@@ -212,7 +375,7 @@ export default function MyPlan() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="mt-2 text-primary"
+                          className="mt-2 text-primary hover:bg-primary/10 -ml-2"
                           onClick={() => addItem(day.id, mealIndex)}
                         >
                           <Plus className="mr-2 h-3 w-3" /> Adicionar Item
@@ -230,7 +393,11 @@ export default function MyPlan() {
       <div className="pt-8 border-t">
         <Dialog>
           <DialogTrigger asChild>
-            <Button variant="destructive" size="sm">
+            <Button
+              variant="destructive"
+              size="sm"
+              className="opacity-80 hover:opacity-100"
+            >
               Apagar Plano Atual
             </Button>
           </DialogTrigger>
