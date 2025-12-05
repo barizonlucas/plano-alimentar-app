@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
+import { cn } from '@/lib/utils'
 
 const HeroSection = () => (
   <div className="flex flex-col items-center justify-center text-center py-12 md:py-20 space-y-8 max-w-3xl mx-auto">
