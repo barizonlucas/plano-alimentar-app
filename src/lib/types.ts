@@ -27,7 +27,8 @@ export type MealLog = {
   mealName: string
   score: number
   itemsEaten: string[]
-  photoUrl?: string
+  photoUrl?: string // Primary photo for backward compatibility
+  photos?: string[] // Support for multiple photos
   feedback: string
 }
 
