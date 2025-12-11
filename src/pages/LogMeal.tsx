@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import usePlanStore from '@/stores/usePlanStore'
 import useProgressStore from '@/stores/useProgressStore'
@@ -21,6 +21,14 @@ import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   Camera,
   Check,
@@ -73,8 +81,41 @@ export default function LogMeal() {
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set())
   const [feedback, setFeedback] = useState('')
   const [extraItems, setExtraItems] = useState('')
+  const [isPhotoDialogOpen, setIsPhotoDialogOpen] = useState(false)
+  const [isCameraCaptureOpen, setIsCameraCaptureOpen] = useState(false)
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null)
+  const [capturedCameraPhotos, setCapturedCameraPhotos] = useState<string[]>([])
+  const [cameraError, setCameraError] = useState('')
 
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const galleryInputRef = useRef<HTMLInputElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  const stopCameraStream = useCallback(() => {
+    setCameraStream((prev) => {
+      if (prev) {
+        prev.getTracks().forEach((track) => track.stop())
+      }
+      return null
+    })
+  }, [])
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.srcObject = cameraStream || null
+    }
+  }, [cameraStream])
+
+  useEffect(() => {
+    return () => {
+      stopCameraStream()
+    }
+  }, [stopCameraStream])
+
+  const closeCameraCapture = useCallback(() => {
+    stopCameraStream()
+    setCapturedCameraPhotos([])
+    setIsCameraCaptureOpen(false)
+  }, [stopCameraStream])
 
   // Derived
   const currentDayPlan = plan[selectedDay]
@@ -121,8 +162,83 @@ export default function LogMeal() {
       setIsUploading(false)
 
       // Reset input
-      if (fileInputRef.current) fileInputRef.current.value = ''
+      if (galleryInputRef.current) galleryInputRef.current.value = ''
+      e.target.value = ''
     }
+  }
+
+  const startCameraCapture = async () => {
+    setCameraError('')
+    if (
+      typeof navigator === 'undefined' ||
+      !navigator.mediaDevices?.getUserMedia
+    ) {
+      setCameraError(
+        'Seu dispositivo não permite acesso à câmera. Escolha fotos na galeria.',
+      )
+      return
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' },
+      })
+      setCapturedCameraPhotos([])
+      setCameraStream(stream)
+      setIsCameraCaptureOpen(true)
+      setIsPhotoDialogOpen(false)
+    } catch (error) {
+      console.error('Erro ao acessar câmera', error)
+      setCameraError(
+        'Não conseguimos acessar sua câmera. Permita o acesso ou selecione fotos na galeria.',
+      )
+    }
+  }
+
+  const handleCapturePhoto = () => {
+    if (!videoRef.current || capturedCameraPhotos.length >= 3) return
+    const video = videoRef.current
+    const width = video.videoWidth
+    const height = video.videoHeight
+
+    if (!width || !height) return
+
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+    const context = canvas.getContext('2d')
+    if (!context) return
+
+    context.drawImage(video, 0, 0, width, height)
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.9)
+    setCapturedCameraPhotos((prev) => {
+      if (prev.length >= 3) return prev
+      return [...prev, dataUrl]
+    })
+  }
+
+  const handleConfirmCameraPhotos = () => {
+    if (capturedCameraPhotos.length === 0) return
+    setPhotos((prev) => [...prev, ...capturedCameraPhotos])
+    closeCameraCapture()
+  }
+
+  const openPhotoSelector = () => {
+    if (!isUploading) {
+      setIsPhotoDialogOpen(true)
+    }
+  }
+
+  const handlePhotoSourceSelection = (source: 'camera' | 'gallery') => {
+    if (isUploading) return
+
+    if (source === 'camera') {
+      startCameraCapture()
+      return
+    }
+
+    setIsPhotoDialogOpen(false)
+    setTimeout(() => galleryInputRef.current?.click(), 0)
   }
 
   const removePhoto = (index: number) => {
@@ -252,47 +368,187 @@ export default function LogMeal() {
           {/* Photo Upload */}
           <div className="space-y-2">
             <Label>Fotos do Prato</Label>
-            <div
-              className={cn(
-                'border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center gap-3 text-muted-foreground transition-colors relative overflow-hidden bg-muted/5',
-                isUploading
-                  ? 'bg-muted/20'
-                  : 'hover:bg-muted/10 cursor-pointer',
-              )}
-              onClick={() => !isUploading && fileInputRef.current?.click()}
+            <Dialog
+              open={isPhotoDialogOpen}
+              onOpenChange={(open) => {
+                if (isUploading && open) return
+                setIsPhotoDialogOpen(open)
+              }}
             >
-              {isUploading ? (
-                <div className="flex flex-col items-center gap-2 animate-fade-in">
-                  <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                  <p className="text-sm font-medium text-foreground">
-                    Enviando fotos...
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <div className="p-3 bg-background rounded-full shadow-sm">
-                    <Camera className="h-6 w-6 text-primary" />
-                  </div>
-                  <div className="text-center">
+              <div
+                className={cn(
+                  'border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center gap-3 text-muted-foreground transition-colors relative overflow-hidden bg-muted/5',
+                  isUploading
+                    ? 'bg-muted/20'
+                    : 'hover:bg-muted/10 cursor-pointer',
+                )}
+                onClick={openPhotoSelector}
+              >
+                {isUploading ? (
+                  <div className="flex flex-col items-center gap-2 animate-fade-in">
+                    <Loader2 className="h-10 w-10 animate-spin text-primary" />
                     <p className="text-sm font-medium text-foreground">
-                      Clique para adicionar fotos
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Tire uma foto ou selecione da galeria
+                      Enviando fotos...
                     </p>
                   </div>
-                </>
-              )}
-              <Input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                multiple
-                className="hidden"
-                onChange={handlePhotoUpload}
-                disabled={isUploading}
-              />
-            </div>
+                ) : (
+                  <>
+                    <div className="p-3 bg-background rounded-full shadow-sm">
+                      <Camera className="h-6 w-6 text-primary" />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-foreground">
+                        Clique para adicionar fotos
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Tire uma foto ou selecione da galeria
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Adicionar fotos</DialogTitle>
+                  <DialogDescription>
+                    Escolha se deseja tirar novas fotos ou selecionar da galeria do
+                    dispositivo.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-3">
+                  <Button
+                    variant="secondary"
+                    className="w-full justify-start gap-3 h-auto py-3"
+                    onClick={() => handlePhotoSourceSelection('camera')}
+                    disabled={isUploading}
+                  >
+                    <Camera className="h-5 w-5 text-primary" />
+                    <div className="flex flex-col items-start text-left">
+                      <span className="font-medium">Tirar foto agora</span>
+                      <span className="text-xs text-muted-foreground">
+                        Use a câmera do dispositivo para capturar
+                      </span>
+                    </div>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start gap-3 h-auto py-3"
+                    onClick={() => handlePhotoSourceSelection('gallery')}
+                    disabled={isUploading}
+                  >
+                    <ImageIcon className="h-5 w-5 text-primary" />
+                    <div className="flex flex-col items-start text-left">
+                      <span className="font-medium">Escolher da galeria</span>
+                      <span className="text-xs text-muted-foreground">
+                        Selecione uma ou mais fotos existentes
+                      </span>
+                    </div>
+                  </Button>
+                </div>
+                {cameraError && (
+                  <p className="text-xs text-destructive text-center mt-2">
+                    {cameraError}
+                  </p>
+                )}
+              </DialogContent>
+            </Dialog>
+
+            <Dialog
+              open={isCameraCaptureOpen}
+              onOpenChange={(open) => {
+                if (!open) closeCameraCapture()
+              }}
+            >
+              <DialogContent className="sm:max-w-3xl">
+                <DialogHeader>
+                  <DialogTitle>Tire suas fotos</DialogTitle>
+                  <DialogDescription>
+                    Capture até 3 fotos em sequência antes de enviar.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="relative bg-black rounded-lg overflow-hidden aspect-video">
+                    {cameraStream ? (
+                      <>
+                        <video
+                          ref={videoRef}
+                          className="w-full h-full object-cover"
+                          autoPlay
+                          playsInline
+                          muted
+                        />
+                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1">
+                          <Button
+                            size="lg"
+                            className="rounded-full px-10"
+                            onClick={handleCapturePhoto}
+                            disabled={capturedCameraPhotos.length >= 3}
+                          >
+                            Capturar foto ({capturedCameraPhotos.length}/3)
+                          </Button>
+                          <p className="text-[11px] text-white/80">
+                            {capturedCameraPhotos.length < 3
+                              ? `Você ainda pode tirar ${3 - capturedCameraPhotos.length} ${
+                                  capturedCameraPhotos.length === 2 ? 'foto' : 'fotos'
+                                }`
+                              : 'Limite de fotos atingido'}
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-muted-foreground">
+                        Ative a câmera do dispositivo para continuar.
+                      </div>
+                    )}
+                  </div>
+                  {capturedCameraPhotos.length > 0 ? (
+                    <div className="grid grid-cols-3 gap-3">
+                      {capturedCameraPhotos.map((photo, index) => (
+                        <div
+                          key={index}
+                          className="relative aspect-square rounded-md overflow-hidden border bg-background"
+                        >
+                          <img
+                            src={photo}
+                            alt={`Pré-visualização ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                          <span className="absolute top-1 left-1 text-[10px] bg-black/60 text-white px-1 rounded">
+                            {index + 1}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center">
+                      Tire até três fotos antes de enviar.
+                    </p>
+                  )}
+                  <DialogFooter className="gap-2 sm:gap-2">
+                    <Button variant="outline" onClick={closeCameraCapture}>
+                      Cancelar
+                    </Button>
+                    <Button
+                      onClick={handleConfirmCameraPhotos}
+                      disabled={capturedCameraPhotos.length === 0}
+                    >
+                      Usar fotos ({capturedCameraPhotos.length})
+                    </Button>
+                  </DialogFooter>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            <Input
+              ref={galleryInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={handlePhotoUpload}
+              disabled={isUploading}
+            />
 
             {/* Uploaded Photos Grid */}
             {photos.length > 0 && (
@@ -317,7 +573,7 @@ export default function LogMeal() {
                 ))}
                 <div
                   className="flex items-center justify-center aspect-square rounded-md border border-dashed hover:bg-muted/50 cursor-pointer transition-colors"
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={openPhotoSelector}
                 >
                   <div className="flex flex-col items-center gap-1 text-muted-foreground">
                     <Plus className="h-5 w-5" />
