@@ -18,8 +18,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import {
   Dialog,
@@ -38,6 +36,8 @@ import {
   Image as ImageIcon,
 } from 'lucide-react'
 import { MealLog } from '@/lib/types'
+import { interpretMealPhotos } from '@/lib/gemini'
+import { toast } from '@/components/ui/use-toast'
 import { cn } from '@/lib/utils'
 
 const DAYS = [
@@ -78,9 +78,7 @@ export default function LogMeal() {
   )
   const [photos, setPhotos] = useState<string[]>([])
   const [isUploading, setIsUploading] = useState(false)
-  const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set())
-  const [feedback, setFeedback] = useState('')
-  const [extraItems, setExtraItems] = useState('')
+  const [isEvaluating, setIsEvaluating] = useState(false)
   const [isPhotoDialogOpen, setIsPhotoDialogOpen] = useState(false)
   const [isCameraCaptureOpen, setIsCameraCaptureOpen] = useState(false)
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null)
@@ -245,48 +243,67 @@ export default function LogMeal() {
     setPhotos((prev) => prev.filter((_, i) => i !== index))
   }
 
-  const toggleItem = (itemId: string) => {
-    const newSet = new Set(checkedItems)
-    if (newSet.has(itemId)) {
-      newSet.delete(itemId)
-    } else {
-      newSet.add(itemId)
-    }
-    setCheckedItems(newSet)
-  }
-
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!selectedMeal) return
-
-    const totalItems = selectedMeal.items.length
-    const checkedCount = checkedItems.size
-
-    // Simple scoring logic
-    let rawScore = totalItems > 0 ? (checkedCount / totalItems) * 100 : 100
-
-    // Penalty for extra items
-    const extraCount = extraItems.trim() ? extraItems.split(',').length : 0
-    rawScore = Math.max(0, rawScore - extraCount * 10)
-
-    // Reward for photos
-    if (photos.length > 0) rawScore = Math.min(100, rawScore + 5)
-
-    const log: MealLog = {
-      id: crypto.randomUUID(),
-      date: new Date().toISOString(),
-      mealId: selectedMeal.id,
-      mealName: selectedMeal.name,
-      score: Math.round(rawScore),
-      itemsEaten: Array.from(checkedItems),
-      photoUrl: photos[0] || undefined, // Keep primary photo for backward compat
-      photos: photos,
-      feedback: feedback + (extraItems ? ` (Extras: ${extraItems})` : ''),
+    if (photos.length === 0) {
+      toast({
+        title: 'Adicione fotos do prato',
+        description: 'Capture ou selecione ao menos uma foto para avaliar.',
+        variant: 'destructive',
+      })
+      return
     }
 
-    addLog(log)
-    navigate('/feedback', {
-      state: { score: log.score, mealName: selectedMeal.name },
-    })
+    const dayLabel =
+      DAYS.find((day) => day.id === selectedDay)?.label || selectedDay
+
+    setIsEvaluating(true)
+
+    try {
+      const analysis = await interpretMealPhotos({
+        photos,
+        dayLabel,
+        meal: selectedMeal,
+      })
+
+      const computedScore = Math.round(
+        Math.min(Math.max(analysis.percentual, 0), 100),
+      )
+
+      const log: MealLog = {
+        id: crypto.randomUUID(),
+        date: new Date().toISOString(),
+        mealId: selectedMeal.id,
+        mealName: selectedMeal.name,
+        score: computedScore,
+        itemsEaten: [],
+        feedback: '',
+        analysis,
+      }
+
+      addLog(log)
+      navigate('/feedback', {
+        state: {
+          score: log.score,
+          mealName: selectedMeal.name,
+          analysis,
+        },
+      })
+      setPhotos([])
+      setCapturedCameraPhotos([])
+    } catch (error) {
+      console.error(error)
+      toast({
+        title: 'Erro ao avaliar refeição',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Não foi possível interpretar as fotos agora.',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsEvaluating(false)
+    }
   }
 
   if (!hasPlan) {
@@ -584,79 +601,19 @@ export default function LogMeal() {
             )}
           </div>
 
-          {selectedMeal && (
-            <div className="space-y-6 animate-fade-in-up pt-4 border-t">
-              <div className="space-y-3">
-                <Label className="text-base font-semibold">
-                  O que você comeu do plano?
-                </Label>
-                {selectedMeal.items.length > 0 ? (
-                  <div className="grid gap-2">
-                    {selectedMeal.items.map((item) => (
-                      <div
-                        key={item.id}
-                        className={cn(
-                          'flex items-center space-x-3 p-3 border rounded-lg transition-all cursor-pointer active:scale-[0.99]',
-                          checkedItems.has(item.id)
-                            ? 'bg-primary/5 border-primary/30'
-                            : 'hover:bg-muted/50',
-                        )}
-                        onClick={() => toggleItem(item.id)}
-                      >
-                        <Checkbox
-                          checked={checkedItems.has(item.id)}
-                          onCheckedChange={() => toggleItem(item.id)}
-                        />
-                        <span
-                          className={cn(
-                            'text-sm font-medium flex-1 select-none',
-                            checkedItems.has(item.id)
-                              ? 'text-primary'
-                              : 'text-foreground',
-                          )}
-                        >
-                          {item.name}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground italic">
-                    Esta refeição não possui itens cadastrados no plano.
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label>Comeu algo fora do plano?</Label>
-                <Input
-                  placeholder="Ex: 2 bombons, 1 fatia de bolo..."
-                  value={extraItems}
-                  onChange={(e) => setExtraItems(e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Como você se sentiu?</Label>
-                <Textarea
-                  placeholder="Registre suas observações, fome, saciedade..."
-                  value={feedback}
-                  onChange={(e) => setFeedback(e.target.value)}
-                  className="resize-none"
-                />
-              </div>
-            </div>
-          )}
         </CardContent>
         <CardFooter>
           <Button
             className="w-full text-lg py-6 font-semibold shadow-lg hover:shadow-xl transition-all"
-            disabled={!selectedMeal || isUploading}
+            disabled={
+              !selectedMeal || isUploading || isEvaluating || photos.length === 0
+            }
             onClick={handleSubmit}
           >
-            {isUploading ? (
+            {isUploading || isEvaluating ? (
               <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processando...
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                {isUploading ? 'Processando fotos...' : 'Interpretando refeição...'}
               </>
             ) : (
               <>

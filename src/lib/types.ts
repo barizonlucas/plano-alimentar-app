@@ -20,6 +20,19 @@ export type WeekPlan = {
   [key: string]: DayPlan
 }
 
+export type MealAnalysis = {
+  aderencia: 'Alta' | 'Média' | 'Baixa' | string
+  percentual: number
+  pontuacao: number
+  descricao: string
+  nutrientes_estimados: {
+    calorias: number
+    proteinas: number
+    carboidratos: number
+    gorduras: number
+  }
+}
+
 export type MealLog = {
   id: string
   date: string // ISO Date string
@@ -27,9 +40,8 @@ export type MealLog = {
   mealName: string
   score: number
   itemsEaten: string[]
-  photoUrl?: string // Primary photo for backward compatibility
-  photos?: string[] // Support for multiple photos
   feedback: string
+  analysis?: MealAnalysis
 }
 
 export type Badge = {

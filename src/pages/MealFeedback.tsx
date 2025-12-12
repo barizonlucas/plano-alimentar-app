@@ -15,14 +15,16 @@ import {
   BarChart2,
 } from 'lucide-react'
 import { useEffect } from 'react'
+import { MealAnalysis } from '@/lib/types'
 
 export default function MealFeedback() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { score, mealName } = (location.state as {
+  const { score, mealName, analysis } = (location.state as {
     score: number
     mealName: string
-  }) || { score: 0, mealName: 'Refeição' }
+    analysis?: MealAnalysis
+  }) || { score: 0, mealName: 'Refeição', analysis: undefined }
 
   // Ensure user didn't just navigate here directly
   useEffect(() => {
@@ -95,6 +97,58 @@ export default function MealFeedback() {
             </p>
             <p className="text-lg font-semibold">{mealName}</p>
           </div>
+
+          {analysis && (
+            <div className="bg-muted/20 p-4 rounded-lg space-y-3 text-left">
+              <div className="flex items-center justify-between text-sm font-medium">
+                <span className="text-muted-foreground">Aderência</span>
+                <span className="text-foreground">
+                  {analysis.aderencia} ({Math.round(analysis.percentual)}%)
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm font-medium">
+                <span className="text-muted-foreground">Pontuação Gemini</span>
+                <span className="text-foreground">
+                  {analysis.pontuacao}/10
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {analysis.descricao}
+              </p>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                {[
+                  {
+                    label: 'Calorias',
+                    value: `${analysis.nutrientes_estimados.calorias} kcal`,
+                  },
+                  {
+                    label: 'Proteínas',
+                    value: `${analysis.nutrientes_estimados.proteinas} g`,
+                  },
+                  {
+                    label: 'Carboidratos',
+                    value: `${analysis.nutrientes_estimados.carboidratos} g`,
+                  },
+                  {
+                    label: 'Gorduras',
+                    value: `${analysis.nutrientes_estimados.gorduras} g`,
+                  },
+                ].map((item) => (
+                  <div
+                    key={item.label}
+                    className="rounded-md border bg-background/60 p-2 flex flex-col"
+                  >
+                    <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                      {item.label}
+                    </span>
+                    <span className="font-semibold text-foreground">
+                      {item.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </CardContent>
         <CardFooter className="flex flex-col gap-3">
           <Button className="w-full text-lg h-12" onClick={() => navigate('/')}>

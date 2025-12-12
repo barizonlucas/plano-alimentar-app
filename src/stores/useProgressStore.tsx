@@ -1,7 +1,28 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { Badge, MealLog, UserStats } from '@/lib/types'
 import { toast } from '@/hooks/use-toast'
-import { isSameDay, parseISO, differenceInDays } from 'date-fns'
+import { parseISO, differenceInDays } from 'date-fns'
+
+const sanitizeLogs = (
+  logs: (MealLog & { photos?: string[]; photoUrl?: string })[] = [],
+): MealLog[] =>
+  logs.map(({ photos: _photos, photoUrl: _photoUrl, ...rest }) => ({
+    ...rest,
+    itemsEaten: rest.itemsEaten || [],
+  }))
+
+let storageWarningShown = false
+
+const notifyStorageError = () => {
+  if (storageWarningShown) return
+  storageWarningShown = true
+  toast({
+    title: 'Armazenamento cheio',
+    description:
+      'Não foi possível salvar todos os dados locais. Considere limpar registros antigos.',
+    variant: 'destructive',
+  })
+}
 
 interface ProgressContextType {
   logs: MealLog[]
@@ -58,7 +79,14 @@ export const ProgressProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [logs, setLogs] = useState<MealLog[]>(() => {
     const saved = localStorage.getItem('pa-user-logs')
-    return saved ? JSON.parse(saved) : []
+    if (!saved) return []
+    try {
+      const parsed = JSON.parse(saved)
+      return sanitizeLogs(parsed)
+    } catch (error) {
+      console.error('Falha ao carregar registros salvos', error)
+      return []
+    }
   })
 
   const [stats, setStats] = useState<UserStats>(() => {
@@ -72,9 +100,18 @@ export const ProgressProvider: React.FC<{ children: React.ReactNode }> = ({
   })
 
   useEffect(() => {
-    localStorage.setItem('pa-user-logs', JSON.stringify(logs))
-    localStorage.setItem('pa-user-stats', JSON.stringify(stats))
-    localStorage.setItem('pa-user-badges', JSON.stringify(badges))
+    const persistSafely = (key: string, value: string) => {
+      try {
+        localStorage.setItem(key, value)
+      } catch (error) {
+        console.error(`Falha ao salvar ${key}`, error)
+        notifyStorageError()
+      }
+    }
+
+    persistSafely('pa-user-logs', JSON.stringify(sanitizeLogs(logs)))
+    persistSafely('pa-user-stats', JSON.stringify(stats))
+    persistSafely('pa-user-badges', JSON.stringify(badges))
   }, [logs, stats, badges])
 
   const addLog = (log: MealLog) => {
