@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { WeekPlan, DEFAULT_PLAN, DayPlan, Meal } from '@/lib/types'
+import { WeekPlan, DayPlan } from '@/lib/types'
 import { toast } from '@/hooks/use-toast'
 
 interface PlanContextType {
   plan: WeekPlan
   hasPlan: boolean
+  isLoading: boolean
+  error: string | null
   savePlan: (newPlan: WeekPlan) => void
   updateDayPlan: (day: string, dayPlan: DayPlan) => void
   resetPlan: () => void
@@ -16,25 +18,66 @@ const PlanContext = createContext<PlanContextType | undefined>(undefined)
 export const PlanProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [plan, setPlan] = useState<WeekPlan>(() => {
-    const saved = localStorage.getItem('pa-user-plan')
-    return saved ? JSON.parse(saved) : {}
-  })
-
+  const [plan, setPlan] = useState<WeekPlan>({})
   const [hasPlan, setHasPlan] = useState<boolean>(false)
+  const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
   useEffect(() => {
-    const saved = localStorage.getItem('pa-user-plan')
-    setHasPlan(!!saved && Object.keys(JSON.parse(saved)).length > 0)
-  }, [plan])
+    const loadPlan = async () => {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const response = await fetch(`${API_URL}/api/plans/current`)
+        if (response.ok) {
+          const data = await response.json()
+          const planData = data.content || data
+          if (planData && Object.keys(planData).length > 0) {
+            setPlan(planData)
+            setHasPlan(true)
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load plan', err)
+        setError('Erro ao carregar o plano do servidor.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    loadPlan()
+  }, [API_URL])
 
-  const savePlan = (newPlan: WeekPlan) => {
+  const savePlan = async (newPlan: WeekPlan) => {
     setPlan(newPlan)
-    localStorage.setItem('pa-user-plan', JSON.stringify(newPlan))
-    toast({
-      title: 'Plano salvo!',
-      description: 'Seu plano alimentar foi atualizado com sucesso.',
-    })
+    setHasPlan(Object.keys(newPlan).length > 0)
+
+    try {
+      const response = await fetch(`${API_URL}/api/plans`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newPlan),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to save plan')
+      }
+
+      toast({
+        title: 'Plano salvo!',
+        description: 'Seu plano alimentar foi atualizado com sucesso.',
+      })
+    } catch (err) {
+      console.error(err)
+      toast({
+        title: 'Erro ao salvar',
+        description: 'Não foi possível salvar as alterações no servidor.',
+        variant: 'destructive',
+      })
+    }
   }
 
   const updateDayPlan = (day: string, dayPlan: DayPlan) => {
@@ -44,8 +87,8 @@ export const PlanProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const resetPlan = () => {
     setPlan({})
-    localStorage.removeItem('pa-user-plan')
     setHasPlan(false)
+    savePlan({})
     toast({
       title: 'Plano removido',
       description: 'Todos os dados do plano foram apagados.',
@@ -79,6 +122,8 @@ export const PlanProvider: React.FC<{ children: React.ReactNode }> = ({
       value: {
         plan,
         hasPlan,
+        isLoading,
+        error,
         savePlan,
         updateDayPlan,
         resetPlan,

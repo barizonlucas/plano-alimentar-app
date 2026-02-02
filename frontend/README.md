@@ -15,7 +15,6 @@
 ## 📋 Pré-requisitos
 
 - Node.js 18+
-- Docker (para executar o ambiente completo localmente)
 - npm
 
 ## 🔧 Instalação

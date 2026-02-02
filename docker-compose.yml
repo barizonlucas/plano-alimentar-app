@@ -1,0 +1,36 @@
+services:
+  frontend:
+    build: ./frontend
+    container_name: plano-alimentar-frontend
+    ports:
+      - "8080:8080"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+  backend:
+    build: ./backend
+    container_name: plano-alimentar-backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://user:password@db:5432/planodb
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    volumes:
+      - ./backend:/app
+
+  db:
+    image: postgres:15-alpine
+    container_name: plano-alimentar-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: planodb

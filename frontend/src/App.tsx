@@ -10,6 +10,8 @@ import ProgressPage from './pages/Progress'
 import Settings from './pages/Settings'
 import NotFound from './pages/NotFound'
 import Layout from './components/Layout'
+import LandingPage from './pages/LandingPage'
+import ProtectedRoutes from './components/ProtectedRoutes'
 import { PlanProvider } from './stores/usePlanStore'
 import { ProgressProvider } from './stores/useProgressStore'
 
@@ -23,13 +25,17 @@ const App = () => (
           <Toaster />
           <Sonner />
           <Routes>
-            <Route element={<Layout />}>
-              <Route path="/" element={<Index />} />
-              <Route path="/plan" element={<MyPlan />} />
-              <Route path="/log" element={<LogMeal />} />
-              <Route path="/feedback" element={<MealFeedback />} />
-              <Route path="/progress" element={<ProgressPage />} />
-              <Route path="/settings" element={<Settings />} />
+            <Route path="/" element={<LandingPage />} />
+
+            <Route path="/app" element={<ProtectedRoutes />}>
+              <Route element={<Layout />}>
+                <Route index element={<Index />} />
+                <Route path="plan" element={<MyPlan />} />
+                <Route path="log" element={<LogMeal />} />
+                <Route path="feedback" element={<MealFeedback />} />
+                <Route path="progress" element={<ProgressPage />} />
+                <Route path="settings" element={<Settings />} />
+              </Route>
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
