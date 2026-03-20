@@ -19,6 +19,10 @@ import {
 } from '@/components/ui/dialog'
 import { Trash2, Download, Shield } from 'lucide-react'
 
+const EXPORT_FILE_NAME = 'diet-ai-backup.json'
+const APP_VERSION = 'DietAI v0.0.1'
+const JSON_MIME_TYPE = 'data:application/json;charset=utf-8,'
+
 export default function Settings() {
   const { plan } = usePlanStore()
   const { logs, stats, clearData: clearProgress } = useProgressStore()
@@ -32,43 +36,42 @@ export default function Settings() {
     }
 
     const dataStr = JSON.stringify(data, null, 2)
-    const dataUri =
-      'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr)
+    const dataUri = JSON_MIME_TYPE + encodeURIComponent(dataStr)
     const linkElement = document.createElement('a')
     linkElement.setAttribute('href', dataUri)
-    linkElement.setAttribute('download', 'mandi-backup-completo.json')
+    linkElement.setAttribute('download', EXPORT_FILE_NAME)
     linkElement.click()
   }
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold">Configurações</h1>
+        <h1 className="text-3xl font-bold">Settings</h1>
         <p className="text-muted-foreground">
-          Gerencie seus dados e preferências.
+          Manage your data and preferences.
         </p>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" /> Seus Dados
+            <Shield className="h-5 w-5" /> Your Data
           </CardTitle>
           <CardDescription>
-            Todos os seus dados são armazenados localmente no seu dispositivo.
-            Nós não temos acesso às suas informações.
+            All your data is stored locally on your device.
+            We do not have access to your information.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/20">
             <div>
-              <p className="font-medium">Exportar Dados</p>
+              <p className="font-medium">Export Data</p>
               <p className="text-sm text-muted-foreground">
-                Baixe uma cópia do seu plano e histórico.
+                Download a copy of your plan and history.
               </p>
             </div>
             <Button variant="outline" onClick={exportAllData}>
-              <Download className="mr-2 h-4 w-4" /> Baixar JSON
+              <Download className="mr-2 h-4 w-4" /> Download JSON
             </Button>
           </div>
         </CardContent>
@@ -76,36 +79,36 @@ export default function Settings() {
 
       <Card className="border-destructive/20">
         <CardHeader>
-          <CardTitle className="text-destructive">Zona de Perigo</CardTitle>
-          <CardDescription>Ações irreversíveis.</CardDescription>
+          <CardTitle className="text-destructive">Danger Zone</CardTitle>
+          <CardDescription>Irreversible actions.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between p-4 border border-destructive/20 rounded-lg bg-destructive/5">
             <div>
-              <p className="font-medium text-destructive">Apagar Progresso</p>
+              <p className="font-medium text-destructive">Clear Progress</p>
               <p className="text-sm text-destructive/80">
-                Limpa histórico de refeições, pontos e conquistas. O plano é
-                mantido.
+                Clears meal history, points, and achievements. The plan is
+                kept.
               </p>
             </div>
             <Dialog>
               <DialogTrigger asChild>
                 <Button variant="destructive">
-                  <Trash2 className="mr-2 h-4 w-4" /> Limpar Progresso
+                  <Trash2 className="mr-2 h-4 w-4" /> Clear Progress
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Tem certeza absoluta?</DialogTitle>
+                  <DialogTitle>Are you absolutely sure?</DialogTitle>
                   <DialogDescription>
-                    Esta ação apagará todo o seu histórico de refeições, pontos
-                    e emblemas. Você não poderá recuperar esses dados.
+                    This action will delete all your meal history, points,
+                    and badges. You will not be able to recover this data.
                   </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
-                  <Button variant="outline">Cancelar</Button>
+                  <Button variant="outline">Cancel</Button>
                   <Button variant="destructive" onClick={clearProgress}>
-                    Sim, apagar tudo
+                    Yes, delete everything
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -115,7 +118,7 @@ export default function Settings() {
       </Card>
 
       <div className="text-center text-sm text-muted-foreground pt-8">
-        <p>Mandi v0.0.1</p>
+        <p>{APP_VERSION}</p>
       </div>
     </div>
   )

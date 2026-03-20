@@ -1,26 +1,37 @@
-# Plano Alimentar App
+# Diet Plan App
 
-## 🚀 Stack Tecnológica
+## 🚀 Tech Stack
 
-- **React 19** - Biblioteca JavaScript para construção de interfaces
-- **Vite** - Build tool extremamente rápida
-- **TypeScript** - Superset tipado do JavaScript
-- **Shadcn UI** - Componentes reutilizáveis e acessíveis
-- **Tailwind CSS** - Framework CSS utility-first
-- **React Router** - Roteamento para aplicações React
-- **React Hook Form** - Gerenciamento de formulários performático
-- **Zod** - Validação de schemas TypeScript-first
-- **Recharts** - Biblioteca de gráficos para React
+### Frontend
+- **React 19** - JavaScript library for building user interfaces
+- **Vite** - Extremely fast build tool
+- **TypeScript** - Typed superset of JavaScript
+- **Shadcn UI** - Reusable and accessible components
+- **Tailwind CSS** - Utility-first CSS framework
+- **React Router** - Routing for React applications
+- **React Hook Form** - Performant form management
+- **Zod** - TypeScript-first schema validation
+- **Recharts** - Charting library for React
 
-## 📋 Pré-requisitos
+### Backend
+- **FastAPI** - High-performance Python web framework
+- **PostgreSQL** - Relational database
+- **SQLAlchemy** - Async ORM for database interactions
+- **Google Gemini API** - AI integration for plan and meal analysis
+
+## 📋 Prerequisites
 
 - Node.js 18+
-- Docker (para executar o ambiente completo localmente)
+- Python 3.10+
+- PostgreSQL database running
 - npm
 
-## 🔧 Instalação
+## 🔧 Installation
+
+### Frontend Setup
 
 ```bash
+cd frontend
 npm install
 ```
 

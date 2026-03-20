@@ -17,9 +17,9 @@ const notifyStorageError = () => {
   if (storageWarningShown) return
   storageWarningShown = true
   toast({
-    title: 'Armazenamento cheio',
+    title: 'Storage full',
     description:
-      'Não foi possível salvar todos os dados locais. Considere limpar registros antigos.',
+      'Could not save all local data. Consider clearing old records.',
     variant: 'destructive',
   })
 }
@@ -42,29 +42,29 @@ const INITIAL_STATS: UserStats = {
 const INITIAL_BADGES: Badge[] = [
   {
     id: 'first-meal',
-    name: 'Primeiro Passo',
-    description: 'Registrou a primeira refeição',
+    name: 'First Step',
+    description: 'Logged the first meal',
     icon: '🏁',
     unlocked: false,
   },
   {
     id: 'perfect-day',
-    name: 'Dia Perfeito',
-    description: '100% de aderência em todas as refeições de um dia',
+    name: 'Perfect Day',
+    description: '100% adherence in all meals of a day',
     icon: '🌟',
     unlocked: false,
   },
   {
     id: 'streak-3',
-    name: 'Consistência',
-    description: 'Manteve o plano por 3 dias seguidos',
+    name: 'Consistency',
+    description: 'Maintained the plan for 3 consecutive days',
     icon: '🔥',
     unlocked: false,
   },
   {
     id: 'master',
-    name: 'Mestre da Dieta',
-    description: 'Acumulou 1000 pontos',
+    name: 'Diet Master',
+    description: 'Accumulated 1000 points',
     icon: '👑',
     unlocked: false,
   },
@@ -84,7 +84,7 @@ export const ProgressProvider: React.FC<{ children: React.ReactNode }> = ({
       const parsed = JSON.parse(saved)
       return sanitizeLogs(parsed)
     } catch (error) {
-      console.error('Falha ao carregar registros salvos', error)
+      console.error('Failed to load saved logs', error)
       return []
     }
   })
@@ -104,7 +104,7 @@ export const ProgressProvider: React.FC<{ children: React.ReactNode }> = ({
       try {
         localStorage.setItem(key, value)
       } catch (error) {
-        console.error(`Falha ao salvar ${key}`, error)
+        console.error(`Failed to save ${key}`, error)
         notifyStorageError()
       }
     }
@@ -161,8 +161,8 @@ export const ProgressProvider: React.FC<{ children: React.ReactNode }> = ({
         newBadges[badgeIndex].unlocked = true
         badgeUnlocked = true
         toast({
-          title: 'Nova Conquista!',
-          description: 'Você desbloqueou: Primeiro Passo',
+          title: 'New Achievement!',
+          description: 'You unlocked: First Step',
         })
       }
     }
@@ -173,8 +173,8 @@ export const ProgressProvider: React.FC<{ children: React.ReactNode }> = ({
         newBadges[badgeIndex].unlocked = true
         badgeUnlocked = true
         toast({
-          title: 'Nova Conquista!',
-          description: 'Você desbloqueou: Mestre da Dieta',
+          title: 'New Achievement!',
+          description: 'You unlocked: Diet Master',
         })
       }
     }
@@ -189,8 +189,8 @@ export const ProgressProvider: React.FC<{ children: React.ReactNode }> = ({
         newBadges[badgeIndex].unlocked = true
         badgeUnlocked = true
         toast({
-          title: 'Nova Conquista!',
-          description: 'Você desbloqueou: Consistência',
+          title: 'New Achievement!',
+          description: 'You unlocked: Consistency',
         })
       }
     }
@@ -208,8 +208,8 @@ export const ProgressProvider: React.FC<{ children: React.ReactNode }> = ({
     localStorage.removeItem('pa-user-stats')
     localStorage.removeItem('pa-user-badges')
     toast({
-      title: 'Dados limpos',
-      description: 'Seu progresso foi reiniciado.',
+      title: 'Data cleared',
+      description: 'Your progress has been reset.',
     })
   }
 

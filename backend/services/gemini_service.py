@@ -5,77 +5,77 @@ import google.generativeai as genai
 from fastapi import UploadFile, HTTPException
 from typing import List
 
-# Configuração da API Key via variável de ambiente
 GENAI_API_KEY = os.getenv("GEMINI_API_KEY")
+GENAI_MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+
 if GENAI_API_KEY:
     genai.configure(api_key=GENAI_API_KEY)
 
-# Prompts originais migrados do frontend
 DIET_PLAN_PROMPT = """
-Você é um assistente especializado em extrair planos alimentares de PDFs brasileiros.
+You are an assistant specialized in extracting diet plans from Brazilian PDFs.
 
-Analise o PDF anexado e retorne APENAS um JSON válido, sem nenhum texto antes ou depois, exatamente nesta estrutura:
+Analyze the attached PDF and return ONLY a valid JSON, without any text before or after, exactly in this structure:
 
 {
   "diet": {
-    "Seg": [ /* refeições completas de segunda */ ],
-    "Ter": [ /* refeições completas de terça */ ],
-    "Qua": [ /* refeições completas de quarta */ ],
-    "Qui": [ /* refeições completas de quinta */ ],
-    "Sex": [ /* refeições completas de sexta */ ],
-    "Sab": [ /* refeições completas de sábado */ ],
-    "Dom": [ /* refeições completas de domingo */ ]
+    "Seg": [ /* full meals for Monday */ ],
+    "Ter": [ /* full meals for Tuesday */ ],
+    "Qua": [ /* full meals for Wednesday */ ],
+    "Qui": [ /* full meals for Thursday */ ],
+    "Sex": [ /* full meals for Friday */ ],
+    "Sab": [ /* full meals for Saturday */ ],
+    "Dom": [ /* full meals for Sunday */ ]
   }
 }
 
-Regras obrigatórias:
-- Cada dia é independente.
-- Se o plano diz “Seg Qua Sex” → copie exatamente o mesmo conteúdo para Seg, Qua e Sex.
-- Se diz “Ter Qui Sab Dom” → copie exatamente o mesmo conteúdo para Ter, Qui, Sab e Dom.
-- Cada refeição deve ter:
+Mandatory rules:
+- Each day is independent.
+- If the plan says "Seg Qua Sex" → copy exactly the same content to Seg, Qua, and Sex.
+- If it says "Ter Qui Sab Dom" → copy exactly the same content to Ter, Qui, Sab, and Dom.
+- Each meal must have:
   {
-    "time": "HH:MM",           // ex: "06:00"
-    "name": "Nome da refeição", // ex: "Café da manhã"
-    "options": [               // array com 1 ou mais opções
+    "time": "HH:MM",           // e.g., "06:00"
+    "name": "Meal Name",       // e.g., "Café da manhã"
+    "options": [               // array with 1 or more options
       [
-        "Alimento completo com quantidade e marca quando houver (ex: Suco de uva integral - Superbom® (200ml))",
-        "Outro alimento da mesma opção...",
+        "Complete food item with quantity and brand when available (e.g., Suco de uva integral - Superbom® (200ml))",
+        "Another food from the same option...",
         ...
       ],
-      [ /* próxima opção, se existir */ ]
+      [ /* next option, if it exists */ ]
     ]
   }
-- Quando houver “ou” dentro da mesma linha → mantenha no mesmo item com “ou” (ex: "Arroz branco (130g) ou Batata doce (165g)")
-- Quando houver várias linhas separadas com • → cada linha vira um item do array da opção.
-- Se houver “Substituição 1” ou similar → vira uma segunda opção dentro do mesmo horário.
-- Ignora kcal, grupos alimentares, nome do nutricionista, nome do paciente, observações e observações gerais.
-- Resposta deve ser 100% JSON válido, sem markdown, sem ```json, sem explicações.
+- When there is "ou" (or) within the same line → keep it in the same item with "ou" (e.g., "Arroz branco (130g) ou Batata doce (165g)").
+- When there are multiple lines separated by • → each line becomes an item in the option's array.
+- If there is "Substituição 1" or similar → it becomes a second option within the same time.
+- Ignore kcal, food groups, nutritionist name, patient name, observations, and general notes.
+- Response must be 100% valid JSON, without markdown, without ```json, without explanations.
 
-Retorne somente o JSON.
+Return only the JSON.
 """
 
 MEAL_ANALYSIS_PROMPT = """
-Você é um assistente especializado em análise nutricional de refeições via imagens.
-Analise as imagens anexadas da refeição consumida. Descreva os ingredientes identificados, estime quantidades aproximadas e valores nutricionais (calorias, proteínas, carboidratos, gorduras) com base em conhecimento geral de alimentos.
-Compare com o plano alimentar fornecido para o dia "{dia}" e refeição "{refeicao}": {plano_refeicao_json} (inclua opções e substituições).
-Calcule:
+You are an assistant specialized in nutritional analysis of meals via images.
+Analyze the attached images of the consumed meal. Describe the identified ingredients, estimate approximate quantities and nutritional values (calories, proteins, carbohydrates, fats) based on general food knowledge.
+Compare with the diet plan provided for the day "{dia}" and meal "{refeicao}": {plano_refeicao_json} (include options and substitutions).
+Calculate:
 
-Aderência: Alta, Média ou Baixa (baseado em similaridade de itens, quantidades e nutrientes).
-Percentual de proximidade ao ideal: Número de 0 a 100%.
-Pontuação: Número de 0 a 10 para gamificação (baseado em aderência, equilíbrio nutricional e completude).
+Adherence: High, Medium or Low (based on similarity of items, quantities, and nutrients).
+Percentage of proximity to ideal: Number from 0 to 100%.
+Score: Number from 0 to 10 for gamification (based on adherence, nutritional balance, and completeness).
 
-Retorne APENAS um JSON válido, sem texto extra:
+Return ONLY a valid JSON, without extra text:
 {
-"aderencia": "Alta/Média/Baixa",
-"percentual": 85,
-"pontuacao": 8,
-"descricao": "Breve explicação da análise e comparação.",
-"nutrientes_estimados": {
-"calorias": 500,
-"proteinas": 20,
-"carboidratos": 60,
-"gorduras": 15
-}
+  "aderencia": "High/Medium/Low",
+  "percentual": 85,
+  "pontuacao": 8,
+  "descricao": "Brief explanation of the analysis and comparison.",
+  "nutrientes_estimados": {
+    "calorias": 500,
+    "proteinas": 20,
+    "carboidratos": 60,
+    "gorduras": 15
+  }
 }
 """
 
@@ -83,7 +83,6 @@ def sanitize_response_text(text: str) -> str:
     if not text:
         return ""
     text = text.strip()
-    # Remove blocos de código markdown se existirem
     if text.startswith("```"):
         text = re.sub(r"^```(?:json)?\s*", "", text)
         text = re.sub(r"\s*```$", "", text)
@@ -93,7 +92,7 @@ async def interpret_diet_plan_service(file: UploadFile):
     if not GENAI_API_KEY:
         raise HTTPException(status_code=500, detail="Gemini API Key not configured")
 
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel(GENAI_MODEL_NAME)
     
     content = await file.read()
     
@@ -111,13 +110,13 @@ async def interpret_diet_plan_service(file: UploadFile):
         return json.loads(cleaned_text)
     except Exception as e:
         print(f"Gemini Error: {e}")
-        raise HTTPException(status_code=500, detail="Falha ao processar o plano alimentar com Gemini.")
+        raise HTTPException(status_code=500, detail="Failed to process the diet plan with Gemini.")
 
 async def analyze_meal_service(photos: List[UploadFile], day_label: str, meal_name: str, meal_plan_json: str):
     if not GENAI_API_KEY:
         raise HTTPException(status_code=500, detail="Gemini API Key not configured")
         
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel(GENAI_MODEL_NAME)
     
     prompt_text = MEAL_ANALYSIS_PROMPT.replace("{dia}", day_label).replace("{refeicao}", meal_name).replace("{plano_refeicao_json}", meal_plan_json)
     
@@ -136,4 +135,4 @@ async def analyze_meal_service(photos: List[UploadFile], day_label: str, meal_na
         return json.loads(cleaned_text)
     except Exception as e:
         print(f"Gemini Error: {e}")
-        raise HTTPException(status_code=500, detail="Falha ao analisar a refeição com Gemini.")
+        raise HTTPException(status_code=500, detail="Failed to analyze the meal with Gemini.")

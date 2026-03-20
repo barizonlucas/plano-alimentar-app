@@ -1,33 +1,37 @@
-from fastapi import FastAPI, UploadFile, File, Form, Depends, Body
+import os
+from fastapi import FastAPI, UploadFile, File, Form, Depends, Body, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
 from database import engine, Base, get_db
-import models  # Importa os modelos para que o Base.metadata os reconheça
+import models
 from services.gemini_service import interpret_diet_plan_service, analyze_meal_service
 
 app = FastAPI()
 
-origins = ["*"]  # Em produção, especifique o domínio exato (ex: http://localhost:8080)
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-@app.on_event("startup")
-async def startup():
-    # Cria as tabelas no banco de dados (apenas para desenvolvimento inicial)
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+# Mock Dependency for current user. Replace with actual JWT/Auth logic.
+async def get_current_user(authorization: str = Header(None), db: AsyncSession = Depends(get_db)):
+    # Replace mock logic with proper token decoding (e.g. JWT) using the authorization header
+    mock_user_id = int(os.getenv("MOCK_USER_ID", "1"))
+    user = await db.get(models.User, mock_user_id)
+    if not user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    return user
 
 @app.get("/")
 def read_root():
-    return {"message": "Backend de Microsserviços rodando com FastAPI e SQLAlchemy!"}
+    return {"message": "Microservices Backend running with FastAPI and PostgreSQL!"}
 
 @app.get("/health")
 def health_check():
@@ -46,31 +50,17 @@ async def analyze_meal(
 ):
     return await analyze_meal_service(photos, day_label, meal_name, meal_plan_json)
 
-# --- Novos Endpoints de Persistência ---
+# --- Persistence Endpoints ---
 
 @app.get("/api/plans/current")
-async def get_current_plan(db: AsyncSession = Depends(get_db)):
-    # Mock: Pega o plano do usuário ID 1 (em produção usaria autenticação real)
-    user_id = 1
-    result = await db.execute(select(models.DietPlan).where(models.DietPlan.user_id == user_id).order_by(desc(models.DietPlan.created_at)).limit(1))
+async def get_current_plan(current_user: models.User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(models.DietPlan).where(models.DietPlan.user_id == current_user.id).order_by(desc(models.DietPlan.created_at)).limit(1))
     plan = result.scalars().first()
     return plan.content if plan else {}
 
 @app.post("/api/plans")
-async def save_plan(plan_content: dict = Body(...), db: AsyncSession = Depends(get_db)):
-    user_id = 1
-    
-    # Verifica se o usuário mock existe, se não, cria
-    result = await db.execute(select(models.User).where(models.User.id == user_id))
-    user = result.scalars().first()
-    
-    if not user:
-        new_user = models.User(id=user_id, nome="Usuário Teste", email="teste@plano.ai", password_hash="dummy", role=models.UserRole.PACIENTE)
-        db.add(new_user)
-        await db.commit()
-    
-    # Salva o novo plano
-    new_plan = models.DietPlan(user_id=user_id, content=plan_content)
+async def save_plan(plan_content: dict = Body(...), current_user: models.User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    new_plan = models.DietPlan(user_id=current_user.id, content=plan_content)
     db.add(new_plan)
     await db.commit()
     return {"status": "success", "id": new_plan.id}
