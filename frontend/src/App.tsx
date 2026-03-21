@@ -10,7 +10,6 @@ import ProgressPage from './pages/Progress'
 import Settings from './pages/Settings'
 import NotFound from './pages/NotFound'
 import Layout from './components/Layout'
-import LandingPage from './pages/LandingPage'
 import ProtectedRoutes from './components/ProtectedRoutes'
 import { PlanProvider } from './stores/usePlanStore'
 import { ProgressProvider } from './stores/useProgressStore'
@@ -25,9 +24,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <Routes>
-            <Route path="/" element={<LandingPage />} />
-
-            <Route path="/app" element={<ProtectedRoutes />}>
+            <Route path="/" element={<ProtectedRoutes />}>
               <Route element={<Layout />}>
                 <Route index element={<Index />} />
                 <Route path="plan" element={<MyPlan />} />

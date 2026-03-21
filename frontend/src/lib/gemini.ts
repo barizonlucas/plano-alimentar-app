@@ -25,8 +25,6 @@ const DAY_MAPPING: Record<string, string> = {
   Dom: 'sunday',
 }
 
-export const RAW_PLAN_STORAGE_KEY = 'pa-user-dietplan-raw'
-
 const sanitizeResponseText = (content?: string): string => {
   if (!content) return ''
 
@@ -109,14 +107,8 @@ export async function interpretDietPlan(file: File): Promise<GeminiResult> {
 
   const parsed = await response.json()
 
-  localStorage.setItem(RAW_PLAN_STORAGE_KEY, JSON.stringify(parsed))
   const weekPlan = convertDietPlanToWeekPlan(parsed)
   return { raw: parsed, weekPlan }
-}
-
-export const getStoredRawPlan = (): GeminiDietPlan | null => {
-  const stored = localStorage.getItem(RAW_PLAN_STORAGE_KEY)
-  return stored ? (JSON.parse(stored) as GeminiDietPlan) : null
 }
 
 const normalizeAnalysis = (analysis: any): MealAnalysis => {
